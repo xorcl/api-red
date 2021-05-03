@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/xorcl/api-red/balance"
 	"github.com/xorcl/api-red/busstop"
+	"github.com/xorcl/api-red/metronetwork"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -31,6 +32,7 @@ func main() {
 	parsers := []Parser{
 		&balance.Parser{},
 		&busstop.Parser{},
+		&metronetwork.Parser{},
 	}
 	r := gin.Default()
 	r.Use(CORSMiddleware())
