@@ -26,8 +26,6 @@ type Parser interface {
 	StopParser()
 }
 
-const API_ROOT = "red"
-
 func main() {
 	parsers := []Parser{
 		&balance.Parser{},
@@ -36,7 +34,7 @@ func main() {
 	r.Use(CORSMiddleware())
 	for _, parser := range parsers {
 		parser.StartParser()
-		r.GET(fmt.Sprintf("/%s/%s", API_ROOT, parser.GetRoute()), parser.Parse)
+		r.GET(fmt.Sprintf("/%s", parser.GetRoute()), parser.Parse)
 		defer parser.StopParser()
 	}
 	r.Run()
