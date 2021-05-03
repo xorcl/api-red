@@ -7,6 +7,18 @@ import (
 	"github.com/xorcl/api-red/balance"
 )
 
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
+	}
+}
+
 type Parser interface {
 	GetRoute() string
 	StartParser()
@@ -21,6 +33,7 @@ func main() {
 		&balance.Parser{},
 	}
 	r := gin.Default()
+	r.Use(CORSMiddleware())
 	for _, parser := range parsers {
 		parser.StartParser()
 		r.GET(fmt.Sprintf("/%s/%s", API_ROOT, parser.GetRoute()), parser.Parse)
