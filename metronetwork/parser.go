@@ -50,8 +50,9 @@ func (bp *Parser) Parse(c *gin.Context) {
 		line := &LineResponse{
 			Stations: make([]*StationResponse, 0),
 		}
-		line.Name = s.Find("strong").First().Text()
-		line.ID = "L" + strings.ToUpper(strings.Split(line.Name, " ")[1])
+		lineNumber := strings.ToUpper(strings.TrimLeft(s.Find("strong").First().Text(), "Línea "))
+		line.Name = "Línea " + lineNumber
+		line.ID = "L" + lineNumber
 		s.Find(ESTACION_SELECTOR).Each(func(i int, t *goquery.Selection) {
 			description, exists := t.Attr("title")
 			if !exists {
