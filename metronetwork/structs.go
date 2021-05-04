@@ -17,6 +17,7 @@ type StationResponse struct {
 	Name        string     `json:"name"`
 	ID          string     `json:"id"`
 	Status      StatusCode `json:"status"`
+	TransferTo  []string   `json:"transfer_to,omitempty"`
 	Description string     `json:"description,omitempty"`
 }
 

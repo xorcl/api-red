@@ -45,6 +45,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 		c.JSON(400, &response)
 		return
 	}
+	transfer_stations := make(map[string][]string)
 	doc.Find(STATUS_SELECTOR).First().Children().Each(func(i int, s *goquery.Selection) {
 		line := &LineResponse{
 			Stations: make([]*StationResponse, 0),
@@ -68,9 +69,13 @@ func (bp *Parser) Parse(c *gin.Context) {
 				line.Issues = true
 				response.Issues = true
 			}
-			name := t.Text()
+			name := strings.TrimSpace(t.Text())
+			if strings.HasSuffix(name, line.ID) {
+				name = strings.TrimSpace(strings.TrimSuffix(name, line.ID))
+				transfer_stations[name] = append(transfer_stations[name], line.ID)
+			}
 			line.Stations = append(line.Stations, &StationResponse{
-				Name:        strings.TrimSpace(name),
+				Name:        name,
 				ID:          slug.Make(strings.TrimSpace(name)),
 				Status:      status,
 				Description: strings.TrimSpace(description),
@@ -79,6 +84,14 @@ func (bp *Parser) Parse(c *gin.Context) {
 		response.Lines = append(response.Lines, line)
 	})
 	response.APIStatus = "OK"
+	// we just need to set the combinations
+	for _, line := range response.Lines {
+		for _, station := range line.Stations {
+			if lines, ok := transfer_stations[station.Name]; ok {
+				station.TransferTo = lines
+			}
+		}
+	}
 	c.JSON(200, &response)
 }
 
