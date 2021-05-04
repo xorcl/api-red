@@ -69,11 +69,8 @@ func (bp *Parser) Parse(c *gin.Context) {
 				line.Issues = true
 				response.Issues = true
 			}
-			name := strings.TrimSpace(t.Text())
-			if strings.HasSuffix(name, line.ID) {
-				name = strings.TrimSpace(strings.TrimSuffix(name, line.ID))
-				transfer_stations[name] = append(transfer_stations[name], line.ID)
-			}
+			name := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(t.Text()), line.ID))
+			transfer_stations[name] = append(transfer_stations[name], line.ID)
 			line.Stations = append(line.Stations, &StationResponse{
 				Name:        name,
 				ID:          slug.Make(strings.TrimSpace(name)),
@@ -88,7 +85,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 	for _, line := range response.Lines {
 		for _, station := range line.Stations {
 			if lines, ok := transfer_stations[station.Name]; ok {
-				station.TransferTo = lines
+				station.Lines = lines
 			}
 		}
 	}
