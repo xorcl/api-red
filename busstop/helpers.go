@@ -77,7 +77,7 @@ func getValidServices(doc *goquery.Document) []*ServiceResponse {
 					return
 				}
 				time := strings.TrimSpace(s.Find(BUS_TIME_SELECTOR).First().Text())
-				timeCaptured := TimeRegex.FindStringSubmatch(time)
+				timeCaptured := TimeRegex.FindAllString(time, 2)
 				minTime := 0
 				maxTime := 60 // Max minutes
 				if len(timeCaptured) >= 2 {
