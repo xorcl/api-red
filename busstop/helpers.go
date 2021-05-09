@@ -21,7 +21,7 @@ const SERVICE_ERROR_SELECTOR = "#servicio_error_solo_paradero"
 const SERVICE_ERROR_DESCRIPTION_SELECTOR = "#respuesta_error_solo_paradero"
 
 const BUS_SERVICE_SELECTOR = "#servicio_respuesta_solo_paradero"
-const BUS_PATENT_SELECTOR = "#bus_respuesta_solo_paradero"
+const BUS_ID_SELECTOR = "#bus_respuesta_solo_paradero"
 const BUS_TIME_SELECTOR = "#tiempo_respuesta_solo_paradero"
 const BUS_DISTANCE_SELECTOR = "#distancia_respuesta_solo_paradero"
 
@@ -71,7 +71,7 @@ func getValidServices(doc *goquery.Document) []*ServiceResponse {
 					}
 					services[busID] = service
 				}
-				patent := strings.TrimSpace(s.Find(BUS_PATENT_SELECTOR).First().Text())
+				patent := strings.TrimSpace(s.Find(BUS_ID_SELECTOR).First().Text())
 				distance, err := strconv.Atoi(strings.TrimSuffix(strings.TrimSpace(s.Find(BUS_DISTANCE_SELECTOR).First().Text()), " mts."))
 				if err != nil {
 					return
@@ -91,7 +91,7 @@ func getValidServices(doc *goquery.Document) []*ServiceResponse {
 					}
 				}
 				newBus := &BusResponse{
-					Patent:         patent,
+					ID:         patent,
 					MetersDistance: distance,
 					MinArrivalTime: minTime,
 					MaxArrivalTime: maxTime,

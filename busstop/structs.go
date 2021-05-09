@@ -16,7 +16,7 @@ type ServiceResponse struct {
 }
 
 type BusResponse struct {
-	Patent         string `json:"patent"`
+	ID             string `json:"id"`
 	MetersDistance int    `json:"meters_distance"`
 	MinArrivalTime int    `json:"min_arrival_time"`
 	MaxArrivalTime int    `json:"max_arrival_time"`
