@@ -59,19 +59,19 @@ func getValidServices(doc *goquery.Document) []*ServiceResponse {
 	validSelectors := []string{SERVICE_OK_SELECTOR_1, SERVICE_OK_SELECTOR_2}
 	for _, selector := range validSelectors {
 		doc.Find(selector).Each(func(i int, s *goquery.Selection) {
-			busID := s.Find(BUS_SERVICE_SELECTOR).First().Text()
-			if len(busID) > 0 {
-				service, ok := services[busID]
+			serviceID := s.Find(BUS_SERVICE_SELECTOR).First().Text()
+			if len(serviceID) > 0 {
+				service, ok := services[serviceID]
 				if !ok {
 					service = &ServiceResponse{
-						ID:                busID,
+						ID:                serviceID,
 						Valid:             true,
 						StatusDescription: "Servicio en Horario Hábil",
 						Buses:             make([]*BusResponse, 0),
 					}
-					services[busID] = service
+					services[serviceID] = service
 				}
-				patent := strings.TrimSpace(s.Find(BUS_ID_SELECTOR).First().Text())
+				busID := strings.TrimSpace(s.Find(BUS_ID_SELECTOR).First().Text())
 				distance, err := strconv.Atoi(strings.TrimSuffix(strings.TrimSpace(s.Find(BUS_DISTANCE_SELECTOR).First().Text()), " mts."))
 				if err != nil {
 					return
@@ -91,7 +91,7 @@ func getValidServices(doc *goquery.Document) []*ServiceResponse {
 					}
 				}
 				newBus := &BusResponse{
-					ID:         patent,
+					ID:         busID,
 					MetersDistance: distance,
 					MinArrivalTime: minTime,
 					MaxArrivalTime: maxTime,
