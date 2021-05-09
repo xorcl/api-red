@@ -24,4 +24,4 @@ Los códigos de status de las estaciones significan lo siguiente:
 * `3`: Accesos Cerrados
 
 
-Ejemplo: https://api.xor.cl/red/metro-network/
+Ejemplo: https://api.xor.cl/red/metro-network

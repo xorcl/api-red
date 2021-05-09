@@ -35,6 +35,7 @@ func main() {
 		&metronetwork.Parser{},
 	}
 	r := gin.Default()
+	r.RedirectTrailingSlash = false
 	r.Use(CORSMiddleware())
 	for _, parser := range parsers {
 		parser.StartParser()
