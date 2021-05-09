@@ -70,13 +70,18 @@ func (bp *Parser) Parse(c *gin.Context) {
 				line.Issues = true
 				response.Issues = true
 			}
-			name := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(t.Text()), line.ID))
+			name := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(t.Nodes[0].FirstChild.Data), line.ID))
+			var reason string
+			if t.Nodes[0].FirstChild.NextSibling != nil {
+				reason = strings.TrimSpace(t.Find(".popover-body").Text())
+			}
 			transfer_stations[name] = append(transfer_stations[name], line.ID)
 			line.Stations = append(line.Stations, &StationResponse{
 				Name:        name,
 				ID:          slug.Make(strings.TrimSpace(name)),
 				Status:      status,
 				Description: strings.TrimSpace(description),
+				Reason:      reason,
 			})
 		})
 		response.Lines = append(response.Lines, line)

@@ -19,6 +19,7 @@ type StationResponse struct {
 	Status      StatusCode `json:"status"`
 	Lines       []string   `json:"lines,omitempty"`
 	Description string     `json:"description,omitempty"`
+	Reason      string     `json:"reason,omitempty"`
 }
 
 type StatusCode int
