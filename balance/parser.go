@@ -66,7 +66,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 		logrus.WithFields(logrus.Fields{
 			"error": response.StatusDescription,
 		}).Error("error parsing Bip balance: %s", err)
-		c.JSON(400, &response)
+		c.JSON(500, &response)
 		return
 	}
 	defer resp.Body.Close()
@@ -77,7 +77,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 			"error": response.StatusDescription,
 		}).Error("error parsing Bip balance: %s", err)
 		bp.getViewState()
-		c.JSON(400, &response)
+		c.JSON(500, &response)
 		return
 	}
 	node := doc.Find(BALANCE_SELECTOR).First()
@@ -87,7 +87,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 			"error": response.StatusDescription,
 		}).Error("error parsing Bip balance: Balance node not found")
 		bp.getViewState()
-		c.JSON(400, &response)
+		c.JSON(500, &response)
 		return
 	}
 	balanceStr := strings.Trim(strings.ReplaceAll(node.Text(), ",", ""), " $\t\n")
@@ -98,7 +98,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 			"error": response.StatusDescription,
 		}).Error("error parsing Bip balance: %s", err)
 		bp.getViewState()
-		c.JSON(400, &response)
+		c.JSON(500, &response)
 		return
 	}
 	response.Balance = balance
