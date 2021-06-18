@@ -18,6 +18,10 @@ func CORSMiddleware() gin.HandlerFunc {
 			return
 		}
 		c.Next()
+		if len(c.Errors) != 0 {
+			// 2nd Try
+			c.Next()
+		}
 	}
 }
 

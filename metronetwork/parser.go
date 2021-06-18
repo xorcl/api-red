@@ -23,7 +23,6 @@ func (bp *Parser) GetRoute() string {
 }
 
 func (bp *Parser) StartParser() {
-
 }
 
 func (bp *Parser) Parse(c *gin.Context) {
