@@ -81,6 +81,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 			"error": response.StatusDescription,
 		}).Errorf("error parsing Bus Stop Schedule: %s", err)
 		c.JSON(400, &response)
+		bp.getSession()
 		return
 	}
 	defer resp.Body.Close()
@@ -95,6 +96,16 @@ func (bp *Parser) Parse(c *gin.Context) {
 		return
 	}
 	response.ID, response.Name, response.StatusDescription = getStopData(doc)
+	if len(response.Name) == 0 {
+		response.SetStatus(20)
+		logrus.WithFields(logrus.Fields{
+			"error": response.StatusDescription,
+		}).Error("error parsing Bus Stop Schedule: Empty response")
+		bp.getSession()
+		c.JSON(400, &response)
+		bp.getSession()
+		return
+	}
 	if response.StatusDescription != "" {
 		response.StatusCode = 30
 		logrus.WithFields(logrus.Fields{
