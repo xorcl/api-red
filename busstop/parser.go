@@ -71,6 +71,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 			"error": response.StatusDescription,
 		}).Errorf("error creating Bus Stop Request: %s", err)
 		c.JSON(400, &response)
+		bp.getSession()
 		return
 	}
 	req.Header.Add("Cookie", fmt.Sprintf("JSESSIONID=%s", bp.Session))
@@ -95,7 +96,8 @@ func (bp *Parser) Parse(c *gin.Context) {
 		c.JSON(400, &response)
 		return
 	}
-	response.ID, response.Name, response.StatusDescription = getStopData(doc)
+	var serviceNumber string
+	response.ID, response.Name, response.StatusDescription, serviceNumber = getStopData(doc)
 	if len(response.Name) == 0 {
 		response.SetStatus(20)
 		logrus.WithFields(logrus.Fields{
@@ -115,8 +117,12 @@ func (bp *Parser) Parse(c *gin.Context) {
 		c.JSON(400, &response)
 		return
 	}
-	response.Services = append(response.Services, getInvalidServices(doc)...)
-	response.Services = append(response.Services, getValidServices(doc)...)
+	if serviceNumber == "" {
+		response.Services = append(response.Services, getInvalidServices(doc)...)
+		response.Services = append(response.Services, getValidServices(doc)...)
+	} else {
+		response.Services = append(response.Services, getSingleService(doc, serviceNumber))
+	}
 	response.SetStatus(0)
 	c.JSON(200, &response)
 }
