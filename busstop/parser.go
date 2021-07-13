@@ -38,6 +38,7 @@ func (bp *Parser) StartParser() {
 }
 
 func (bp *Parser) Parse(c *gin.Context) {
+	bp.getSession() // TODO: Get the session only once
 	stopID := c.Param("stopid")
 	response := Response{
 		Services: make([]*ServiceResponse, 0),
@@ -71,7 +72,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 			"error": response.StatusDescription,
 		}).Errorf("error creating Bus Stop Request: %s", err)
 		c.JSON(400, &response)
-		bp.getSession()
+		// bp.getSession()
 		return
 	}
 	req.Header.Add("Cookie", fmt.Sprintf("JSESSIONID=%s", bp.Session))
@@ -81,8 +82,8 @@ func (bp *Parser) Parse(c *gin.Context) {
 		logrus.WithFields(logrus.Fields{
 			"error": response.StatusDescription,
 		}).Errorf("error parsing Bus Stop Schedule: %s", err)
+		// bp.getSession()
 		c.JSON(400, &response)
-		bp.getSession()
 		return
 	}
 	defer resp.Body.Close()
@@ -92,7 +93,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 		logrus.WithFields(logrus.Fields{
 			"error": response.StatusDescription,
 		}).Error("error parsing Bus Stop Schedule: %s", err)
-		bp.getSession()
+		// bp.getSession()
 		c.JSON(400, &response)
 		return
 	}
@@ -103,9 +104,8 @@ func (bp *Parser) Parse(c *gin.Context) {
 		logrus.WithFields(logrus.Fields{
 			"error": response.StatusDescription,
 		}).Error("error parsing Bus Stop Schedule: Empty response")
-		bp.getSession()
+		// bp.getSession()
 		c.JSON(400, &response)
-		bp.getSession()
 		return
 	}
 	if response.StatusDescription != "" {
@@ -113,7 +113,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 		logrus.WithFields(logrus.Fields{
 			"error": response.StatusDescription,
 		}).Error("error parsing Bus Stop Schedule: %s", err)
-		bp.getSession()
+		// bp.getSession()
 		c.JSON(400, &response)
 		return
 	}
