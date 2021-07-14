@@ -108,7 +108,7 @@ func (bp *Parser) Parse(c *gin.Context) {
 		c.JSON(400, &response)
 		return
 	}
-	if response.StatusDescription != "" {
+	if response.StatusDescription != "" && serviceNumber == "" {
 		response.StatusCode = 30
 		logrus.WithFields(logrus.Fields{
 			"error": response.StatusDescription,
