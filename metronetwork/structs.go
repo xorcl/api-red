@@ -86,7 +86,7 @@ func (ct *CompositeTime) IsClosed(isHoliday bool) (bool, error) {
 		return false, err
 	}
 	open = open.AddDate(now.Year(), 0, now.YearDay()-1)
-	close, err = time.Parse("15:04", closeStr)
+	close, err = time.ParseInLocation("15:04", closeStr, now.Location())
 	if err != nil {
 		logrus.Errorf("error checking if holiday: %s", err)
 		return false, err
