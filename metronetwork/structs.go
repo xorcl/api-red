@@ -82,17 +82,22 @@ func (ct *CompositeTime) IsClosed(isHoliday bool) (bool, error) {
 	}
 	open, err = time.Parse("15:04", openStr)
 	if err != nil {
-		logrus.Error("error checking if holiday: %s", err)
+		logrus.Errorf("error checking if holiday: %s", err)
 		return false, err
 	}
+	open = open.AddDate(now.Year(), 0, now.YearDay()-1)
 	close, err = time.Parse("15:04", closeStr)
 	if err != nil {
-		logrus.Error("error checking if holiday: %s", err)
+		logrus.Errorf("error checking if holiday: %s", err)
 		return false, err
 	}
+	close = close.AddDate(now.Year(), 0, now.YearDay()-1)
 	if close.Before(open) {
 		close = close.AddDate(0, 0, 1)
 	}
+	logrus.Infof("Current Date: %s", now.String())
+	logrus.Infof("Open Date: %s", open.String())
+	logrus.Infof("Close Date: %s", close.String())
 	return now.Before(open) || now.After(close), nil
 }
 
