@@ -9,6 +9,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/xorcl/api-red/common"
 )
 
 const BASE_URL = "http://web.smsbus.cl/web/buscarAction.do"
@@ -145,4 +146,8 @@ func (bp *Parser) getSession() {
 			return
 		}
 	}
+}
+
+func (p *Parser) GetCronTasks() []*common.CronTask {
+	return make([]*common.CronTask, 0)
 }

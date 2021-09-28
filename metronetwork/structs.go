@@ -1,7 +1,14 @@
 package metronetwork
 
+import (
+	"time"
+
+	"github.com/sirupsen/logrus"
+)
+
 type Response struct {
 	APIStatus string          `json:"api_status"`
+	Time      string          `json:"time"`
 	Issues    bool            `json:"issues"`
 	Lines     []*LineResponse `json:"lines"`
 }
@@ -14,12 +21,77 @@ type LineResponse struct {
 }
 
 type StationResponse struct {
-	Name        string     `json:"name"`
-	ID          string     `json:"id"`
-	Status      StatusCode `json:"status"`
-	Lines       []string   `json:"lines,omitempty"`
-	Description string     `json:"description,omitempty"`
-	Reason      string     `json:"reason,omitempty"`
+	Name        string         `json:"name"`
+	ID          string         `json:"id"`
+	Status      StatusCode     `json:"status"`
+	Lines       []string       `json:"lines,omitempty"`
+	Description string         `json:"description,omitempty"`
+	Reason      string         `json:"reason,omitempty"`
+	Schedule    *CompositeTime `json:"schedule"`
+}
+
+type KeyValResponse map[string]struct {
+	Estaciones []struct {
+		Nombre string `json:"nombre"`
+		Codigo string `json:"codigo"`
+	} `json:"estaciones"`
+}
+
+type DayResponse struct {
+	LunesViernes string `json:"lunes_viernes"`
+	Sabado       string `json:"sabado"`
+	Domingo      string `json:"domingo"`
+}
+type OpenCloseResponse struct {
+	Abrir  DayResponse `json:"abrir"`
+	Cerrar DayResponse `json:"cerrar"`
+}
+
+type ScheduleResponse struct {
+	Estacion OpenCloseResponse `json:"estacion"`
+	//	Boleteria OpenCloseResponse `json:""`
+}
+
+type WeekTime struct {
+	Weekdays string `json:"weekdays"`
+	Saturday string `json:"saturday"`
+	Holidays string `json:"holidays"`
+}
+type CompositeTime struct {
+	Open  WeekTime `json:"open"`
+	Close WeekTime `json:"close"`
+}
+
+func (ct *CompositeTime) IsClosed(isHoliday bool) (bool, error) {
+	now := time.Now()
+	var openStr, closeStr string
+	var open, close time.Time
+	var err error
+	switch {
+	case isHoliday || now.Weekday() == time.Sunday:
+		openStr = ct.Open.Holidays
+		closeStr = ct.Close.Holidays
+	case now.Weekday() == time.Saturday:
+		openStr = ct.Open.Holidays
+		closeStr = ct.Close.Holidays
+	default:
+		openStr = ct.Open.Holidays
+		closeStr = ct.Close.Holidays
+	}
+	open, err = time.Parse("15:04", openStr)
+	if err != nil {
+		logrus.Error("error checking if holiday: %s", err)
+		return false, err
+	}
+	close, err = time.Parse("15:04", closeStr)
+	if err != nil {
+		logrus.Error("error checking if holiday: %s", err)
+		return false, err
+	}
+	if close.Before(open) {
+		close = close.AddDate(0, 0, 1)
+	}
+	return now.Before(open) || now.After(close), nil
 }
 
 type StatusCode int

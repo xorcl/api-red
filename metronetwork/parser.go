@@ -1,21 +1,31 @@
 package metronetwork
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
 	"github.com/gosimple/slug"
 	"github.com/sirupsen/logrus"
+	"github.com/xorcl/api-red/common"
 )
 
 const STATUS_SELECTOR = "#estadoRed .row.pTop30 > .col-md-12 > .row"
 const ESTACION_SELECTOR = ".estadoEstaciones > li"
 const URL = "https://metro.cl/tu-viaje/estado-red"
+const KeyValURL = "https://www.metro.cl/api/estadoRedDetalle.php"
+const TimeURL = "https://www.metro.cl/api/horariosEstacion.php?cod=%s"
+const HolidayURL = "https://apis.digital.gob.cl/fl/feriados/%d/%d/%d"
 
 type Parser struct {
-	HTTPRequest http.Request
+	HTTPRequest  http.Request
+	StationTimes map[string]*CompositeTime
+	IsHoliday    bool
 }
 
 func (bp *Parser) GetRoute() string {
@@ -28,6 +38,7 @@ func (bp *Parser) StartParser() {
 func (bp *Parser) Parse(c *gin.Context) {
 	response := &Response{
 		Lines: make([]*LineResponse, 0),
+		Time:  time.Now().Format("2006-01-02 15:04:05"),
 	}
 	resp, err := http.Get(URL)
 	if err != nil {
@@ -75,13 +86,20 @@ func (bp *Parser) Parse(c *gin.Context) {
 				reason = strings.TrimSpace(t.Find(".popover-body").Text())
 			}
 			transfer_stations[name] = append(transfer_stations[name], line.ID)
-			line.Stations = append(line.Stations, &StationResponse{
+			station := &StationResponse{
 				Name:        name,
 				ID:          slug.Make(strings.TrimSpace(name)),
 				Status:      status,
 				Description: strings.TrimSpace(description),
 				Reason:      reason,
-			})
+			}
+			if time, ok := bp.StationTimes[station.ID]; ok {
+				station.Schedule = time
+				if closed, err := time.IsClosed(bp.IsHoliday); closed && err == nil {
+					station.Status = 5
+				}
+			}
+			line.Stations = append(line.Stations, station)
 		})
 		response.Lines = append(response.Lines, line)
 	})
@@ -99,4 +117,83 @@ func (bp *Parser) Parse(c *gin.Context) {
 
 func (bp *Parser) StopParser() {
 
+}
+
+func (p *Parser) GetCronTasks() []*common.CronTask {
+	regex := regexp.MustCompile(`-l\da?$`)
+	return []*common.CronTask{
+		{
+			Name: "Get all stations",
+			Time: "0 1 * * *",
+			Execute: func() error {
+				logrus.Infof("checking station schedules...")
+				kv := make(KeyValResponse)
+				completeNames := make(map[string]string)
+				resp, err := http.Get(KeyValURL)
+				if err != nil {
+					logrus.Errorf("Error retrieving Metro Status page: %s", err)
+					return err
+				}
+				defer resp.Body.Close()
+				err = json.NewDecoder(resp.Body).Decode(&kv)
+				if err != nil {
+					logrus.Errorf("Error parsing Metro Status body: %s", err)
+					return err
+				}
+				for _, v := range kv {
+					for _, station := range v.Estaciones {
+						slug := strings.TrimSpace(slug.Make(station.Nombre))
+						completeNames[station.Codigo] = regex.ReplaceAllString(slug, "")
+					}
+				}
+				p.StationTimes = make(map[string]*CompositeTime)
+				for code, name := range completeNames {
+					logrus.Infof("checking schedule for %s...", name)
+					p.StationTimes[name] = &CompositeTime{}
+					sr := ScheduleResponse{}
+					resp, err := http.Get(fmt.Sprintf(TimeURL, code))
+					if err != nil {
+						logrus.Errorf("Error retrieving %s station schedule page: %s", name, err)
+						continue
+					}
+					defer resp.Body.Close()
+					err = json.NewDecoder(resp.Body).Decode(&sr)
+					if err != nil {
+						logrus.Errorf("Error parsing Metro Status body: %s", err)
+						continue
+					}
+					p.StationTimes[name].Open.Weekdays = strings.TrimSpace(sr.Estacion.Abrir.LunesViernes)
+					p.StationTimes[name].Open.Saturday = strings.TrimSpace(sr.Estacion.Abrir.Sabado)
+					p.StationTimes[name].Open.Holidays = strings.TrimSpace(sr.Estacion.Abrir.Domingo)
+
+					p.StationTimes[name].Close.Weekdays = strings.TrimSpace(sr.Estacion.Cerrar.LunesViernes)
+					p.StationTimes[name].Close.Saturday = strings.TrimSpace(sr.Estacion.Cerrar.Sabado)
+					p.StationTimes[name].Close.Holidays = strings.TrimSpace(sr.Estacion.Cerrar.Domingo)
+				}
+				return nil
+			},
+		},
+		{
+			Name: "Is holiday today?",
+			Time: "0 0 * * *",
+			Execute: func() error {
+				logrus.Infof("checking if today is holiday...")
+				p.IsHoliday = false
+				holidays := make([]struct{}, 0)
+				now := time.Now()
+				resp, err := http.Get(fmt.Sprintf(HolidayURL, now.Year(), now.Month(), now.Day()))
+				if err != nil {
+					logrus.Errorf("Error retrieving Gob Holiday API: %s", err)
+					return err
+				}
+				defer resp.Body.Close()
+				err = json.NewDecoder(resp.Body).Decode(&holidays)
+				if err == nil && len(holidays) > 0 {
+					p.IsHoliday = true
+				}
+				logrus.Infof("today is holiday: %t", p.IsHoliday)
+				return nil
+			},
+		},
+	}
 }

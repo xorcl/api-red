@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/robfig/cron"
 	"github.com/xorcl/api-red/balance"
 	"github.com/xorcl/api-red/busstop"
+	"github.com/xorcl/api-red/common"
 	"github.com/xorcl/api-red/metronetwork"
 )
 
@@ -30,6 +33,7 @@ type Parser interface {
 	StartParser()
 	Parse(c *gin.Context)
 	StopParser()
+	GetCronTasks() []*common.CronTask
 }
 
 func main() {
@@ -41,10 +45,25 @@ func main() {
 	r := gin.Default()
 	r.RedirectTrailingSlash = false
 	r.Use(CORSMiddleware())
+	c := cron.New()
 	for _, parser := range parsers {
 		parser.StartParser()
 		r.GET(fmt.Sprintf("/%s", parser.GetRoute()), parser.Parse)
 		defer parser.StopParser()
+		for _, task := range parser.GetCronTasks() {
+			c.AddFunc(task.Time, func() {
+				log.Printf("Executing %s task...", parser.GetRoute())
+				err := task.Execute()
+				if err != nil {
+					log.Printf("Error executing task: %s", err)
+				}
+			})
+			// Execute now too
+			err := task.Execute()
+			if err != nil {
+				log.Printf("Error executing task: %s", err)
+			}
+		}
 	}
 	r.Run()
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/xorcl/api-red/common"
 )
 
 const BASE_URL = "https://cargatubip.metro.cl/CargaTuBipV2/"
@@ -40,7 +41,7 @@ func (bp *Parser) StartParser() {
 }
 
 func (bp *Parser) Parse(c *gin.Context) {
-        bp.getViewState() // TODO: Do this once
+	bp.getViewState() // TODO: Do this once
 	response := Response{}
 	if c.Param("bipid") == "" {
 		response.SetStatus(11)
@@ -138,4 +139,8 @@ func (bp *Parser) getViewState() {
 		return
 	}
 	bp.ViewState = viewstate
+}
+
+func (p *Parser) GetCronTasks() []*common.CronTask {
+	return make([]*common.CronTask, 0)
 }
