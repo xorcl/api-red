@@ -14,20 +14,22 @@ type Response struct {
 }
 
 type LineResponse struct {
-	Name     string             `json:"name"`
-	ID       string             `json:"id"`
-	Issues   bool               `json:"issues"`
-	Stations []*StationResponse `json:"stations"`
+	Name                     string             `json:"name"`
+	ID                       string             `json:"id"`
+	Issues                   bool               `json:"issues"`
+	StationsClosedBySchedule int                `json:"stations_closed_by_schedule"`
+	Stations                 []*StationResponse `json:"stations"`
 }
 
 type StationResponse struct {
-	Name        string         `json:"name"`
-	ID          string         `json:"id"`
-	Status      StatusCode     `json:"status"`
-	Lines       []string       `json:"lines,omitempty"`
-	Description string         `json:"description,omitempty"`
-	Reason      string         `json:"reason,omitempty"`
-	Schedule    *CompositeTime `json:"schedule"`
+	Name               string         `json:"name"`
+	ID                 string         `json:"id"`
+	Status             StatusCode     `json:"status"`
+	Lines              []string       `json:"lines,omitempty"`
+	Description        string         `json:"description,omitempty"`
+	Reason             string         `json:"reason,omitempty"`
+	IsClosedBySchedule bool           `json:"is_closed_by_schedule"`
+	Schedule           *CompositeTime `json:"schedule"`
 }
 
 type KeyValResponse map[string]struct {

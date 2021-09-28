@@ -96,7 +96,8 @@ func (bp *Parser) Parse(c *gin.Context) {
 			if time, ok := bp.StationTimes[station.ID]; ok {
 				station.Schedule = time
 				if closed, err := time.IsClosed(bp.IsHoliday); closed && err == nil {
-					station.Status = 5
+					station.IsClosedBySchedule = true
+					line.StationsClosedBySchedule += 1
 				}
 			}
 			line.Stations = append(line.Stations, station)
