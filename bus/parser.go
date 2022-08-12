@@ -32,12 +32,12 @@ func (bp *Parser) Parse(c *gin.Context) {
 	bp.getSession() // TODO: Get the session only once
 	stopID := c.Param("stopid")
 	url := fmt.Sprintf(BASE_URL, bp.Session, stopID)
-	fmt.Printf(url)
 	response, _ := http.Get(url)
 	reader := response.Body
 	contentLength := response.ContentLength
 	contentType := response.Header.Get("Content-Type")
 	c.DataFromReader(http.StatusOK, contentLength, contentType, reader, nil)
+	response.Body.Close()
 }
 
 func (bp *Parser) StopParser() {
@@ -46,9 +46,9 @@ func (bp *Parser) StopParser() {
 
 func (bp *Parser) getSession() {
 	resp, _ := http.Get(SESSION_URL)
-	defer resp.Body.Close()
 	// read all body
 	body, _ := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
 	// find jwt
 	jwtB64 := bp.BusStopRegexp.FindSubmatch(body)
 	jwt, _ := base64.StdEncoding.DecodeString(string(jwtB64[1]))
