@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron"
 	"github.com/xorcl/api-red/balance"
+	"github.com/xorcl/api-red/bus"
 	"github.com/xorcl/api-red/busstop"
 	"github.com/xorcl/api-red/common"
 	"github.com/xorcl/api-red/metronetwork"
@@ -41,6 +42,7 @@ func main() {
 		&balance.Parser{},
 		&busstop.Parser{},
 		&metronetwork.Parser{},
+		&bus.Parser{},
 	}
 	r := gin.Default()
 	r.RedirectTrailingSlash = false
