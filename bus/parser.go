@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
 
@@ -32,7 +33,12 @@ func (bp *Parser) Parse(c *gin.Context) {
 	bp.getSession() // TODO: Get the session only once
 	stopID := c.Param("stopid")
 	url := fmt.Sprintf(BASE_URL, bp.Session, stopID)
-	response, _ := http.Get(url)
+	response, err := http.Get(url)
+	if err != nil {
+		log.Printf("Error decoding info from external api for bus parser: %s", err)
+		c.JSON(400, gin.H{"error": "No puedo obtener la información"})
+		return
+	}
 	reader := response.Body
 	contentLength := response.ContentLength
 	contentType := response.Header.Get("Content-Type")
@@ -45,13 +51,24 @@ func (bp *Parser) StopParser() {
 }
 
 func (bp *Parser) getSession() {
-	resp, _ := http.Get(SESSION_URL)
+	resp, err := http.Get(SESSION_URL)
+	if err != nil {
+		log.Printf("Error getting session for bus parser: %s", err)
+		return
+	}
 	// read all body
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error reading session page for bus parser: %s", err)
+		return
+	}
 	resp.Body.Close()
 	// find jwt
 	jwtB64 := bp.BusStopRegexp.FindSubmatch(body)
-	jwt, _ := base64.StdEncoding.DecodeString(string(jwtB64[1]))
+	jwt, err := base64.StdEncoding.DecodeString(string(jwtB64[1]))
+	if err != nil {
+		log.Printf("Error decoding jwt for bus parser: %s", err)
+	}
 	bp.Session = string(jwt)
 }
 
