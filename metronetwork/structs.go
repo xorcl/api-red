@@ -74,11 +74,11 @@ func (ct *CompositeTime) IsClosed(isHoliday bool) (bool, error) {
 		openStr = ct.Open.Holidays
 		closeStr = ct.Close.Holidays
 	case now.Weekday() == time.Saturday:
-		openStr = ct.Open.Holidays
-		closeStr = ct.Close.Holidays
+		openStr = ct.Open.Saturday
+		closeStr = ct.Close.Saturday
 	default:
-		openStr = ct.Open.Holidays
-		closeStr = ct.Close.Holidays
+		openStr = ct.Open.Weekdays
+		closeStr = ct.Close.Weekdays
 	}
 	open, err = time.ParseInLocation("15:04", openStr, now.Location())
 	if err != nil {
